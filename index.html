@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rasayana — Indian Food Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0c0a07;
+  --surface:  #141210;
+  --card:     #1a1713;
+  --card2:    #1f1c17;
+  --border:   rgba(210,165,80,0.15);
+  --gold:     #d2a550;
+  --gold-dim: #9a7438;
+  --gold-glow:rgba(210,165,80,0.2);
+  --cream:    #f0e6d0;
+  --muted:    #7a6e60;
+  --muted2:   #5a5248;
+  --green:    #4caf7d;
+  --red:      #e07070;
+  --orange:   #e0943a;
+  --blue:     #6ab0d4;
+  --r:        14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--cream);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+
+/* noise */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+.glow-orb{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(210,165,80,0.055) 0%,transparent 70%);top:-250px;right:-250px;pointer-events:none;z-index:0;animation:drift 9s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(-50px,50px) scale(1.12)}}
+
+.wrapper{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 24px 100px}
+
+/* ── HEADER ── */
+header{padding:52px 0 44px;text-align:center;animation:fadeUp .8s ease both}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px}
+.logo-line{width:44px;height:1px;background:var(--gold-dim)}
+.logo-diamond{width:7px;height:7px;background:var(--gold);transform:rotate(45deg)}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,7vw,4.6rem);font-weight:300;letter-spacing:.04em;line-height:1}
+h1 em{color:var(--gold);font-style:italic}
+.tagline{margin-top:10px;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+
+#status-pill{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:5px 16px;border:1px solid var(--border);border-radius:100px;font-family:'DM Mono',monospace;font-size:.67rem;letter-spacing:.12em;color:var(--muted);background:var(--surface);transition:all .3s}
+#status-pill.ok{border-color:rgba(76,175,125,.35);color:var(--green)}
+#status-pill.fail{border-color:rgba(224,112,112,.35);color:var(--red)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── DROP ZONE ── */
+.drop-zone{position:relative;border:1.5px dashed var(--border);border-radius:var(--r);padding:56px 24px;text-align:center;cursor:pointer;background:var(--surface);transition:border-color .3s,background .3s,transform .2s;overflow:hidden;animation:fadeUp .8s .1s ease both}
+.drop-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,var(--gold-glow) 0%,transparent 65%);opacity:0;transition:opacity .4s}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold-dim);background:#1e1b15;transform:translateY(-2px)}
+.drop-zone:hover::before,.drop-zone.drag-over::before{opacity:1}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:2.6rem;margin-bottom:14px;display:block;transition:transform .3s}
+.drop-zone:hover .drop-icon{transform:scale(1.1) rotate(-5deg)}
+.drop-title{font-family:'Cormorant Garamond',serif;font-size:1.35rem;color:var(--cream);margin-bottom:5px}
+.drop-sub{font-size:.78rem;color:var(--muted);letter-spacing:.05em}
+.drop-sub b{color:var(--gold-dim);font-weight:400}
+
+/* ── PREVIEW ── */
+#preview-wrap{display:none;margin-top:22px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);position:relative;animation:fadeUp .4s ease both}
+#preview-img{width:100%;max-height:340px;object-fit:cover;display:block}
+.preview-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(12,10,7,.75) 0%,transparent 50%)}
+.preview-label{position:absolute;bottom:14px;left:18px;font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.clear-btn{position:absolute;top:10px;right:10px;background:rgba(12,10,7,.8);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:.7rem;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.08em;backdrop-filter:blur(8px);transition:all .2s}
+.clear-btn:hover{color:var(--cream);border-color:var(--gold-dim)}
+
+/* ── BUTTON ── */
+.btn-wrap{margin-top:18px;display:flex;justify-content:center;animation:fadeUp .8s .2s ease both}
+#analyse-btn{position:relative;padding:13px 48px;background:transparent;border:1.5px solid var(--gold-dim);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:.1em;cursor:pointer;border-radius:6px;overflow:hidden;transition:color .3s,border-color .3s}
+#analyse-btn::before{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.77,0,.175,1);z-index:0}
+#analyse-btn:hover{color:var(--bg);border-color:var(--gold)}
+#analyse-btn:hover::before{transform:scaleX(1)}
+#analyse-btn span{position:relative;z-index:1}
+#analyse-btn:disabled{opacity:.4;cursor:not-allowed}
+#analyse-btn:disabled::before{display:none}
+
+/* ── LOADER ── */
+#loader{display:none;margin:44px auto;text-align:center}
+.loader-ring{width:44px;height:44px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .85s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+
+/* ── ERROR ── */
+#error-box{display:none;margin-top:22px;padding:16px 20px;border:1px solid rgba(224,112,112,.3);border-radius:var(--r);background:rgba(224,112,112,.07);font-size:.85rem;color:var(--red);font-family:'DM Mono',monospace;animation:fadeUp .3s ease}
+
+/* ── RESULTS ── */
+#results{margin-top:36px;display:none;animation:fadeUp .5s ease both}
+.results-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.results-title{font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:300}
+.results-sub{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* ── TOP CARD ── */
+.top-card{background:var(--card);border:1px solid rgba(210,165,80,.28);border-radius:var(--r);padding:0;overflow:hidden;margin-bottom:14px;position:relative}
+.top-card-header{padding:26px 28px 0}
+.top-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.top-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(210,165,80,.3);padding:3px 10px;border-radius:100px;margin-bottom:12px}
+.top-name{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,5vw,3rem);font-weight:300;line-height:1.1;margin-bottom:4px}
+.top-origin{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.14em;color:var(--muted);margin-bottom:14px}
+.conf-row{display:flex;align-items:center;gap:12px;margin-bottom:0}
+.conf-pct{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--gold-dim);white-space:nowrap}
+.conf-bar-wrap{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.conf-bar{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));border-radius:2px;width:0;transition:width 1s cubic-bezier(.77,0,.175,1) .3s}
+
+/* ── INFO GRID ── */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1px;background:var(--border);margin-top:22px}
+.info-cell{background:var(--card2);padding:14px 16px}
+.info-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:5px}
+.info-value{font-size:.88rem;color:var(--cream);font-weight:400;line-height:1.3}
+
+/* health tag colours */
+.tag-healthy{color:var(--green)}
+.tag-moderate{color:var(--orange)}
+.tag-indulgent{color:var(--red)}
+
+/* spice dots */
+.spice-dots{display:flex;gap:3px;margin-top:4px}
+.spice-dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--muted2)}
+.spice-dot.lit{background:var(--orange);border-color:var(--orange)}
+
+/* diet badge */
+.diet-pill{display:inline-block;font-family:'DM Mono',monospace;font-size:.6rem;padding:2px 8px;border-radius:100px;letter-spacing:.08em;margin-top:3px}
+.diet-veg{background:rgba(76,175,125,.12);color:var(--green);border:1px solid rgba(76,175,125,.25)}
+.diet-vegan{background:rgba(76,175,125,.18);color:#7ee3a8;border:1px solid rgba(76,175,125,.35)}
+.diet-nonveg{background:rgba(224,112,112,.1);color:var(--red);border:1px solid rgba(224,112,112,.25)}
+
+/* description */
+.top-desc-section{padding:18px 28px 20px;border-top:1px solid var(--border)}
+.top-desc{font-size:.87rem;color:var(--muted);line-height:1.68;margin-bottom:14px}
+
+/* ingredients */
+.ingr-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.ingr-list{display:flex;flex-wrap:wrap;gap:6px}
+.ingr-pill{font-size:.75rem;padding:3px 10px;background:rgba(210,165,80,.07);border:1px solid rgba(210,165,80,.18);border-radius:100px;color:var(--muted)}
+
+/* fun fact */
+.fun-fact{margin-top:14px;padding:12px 16px;background:rgba(106,176,212,.06);border-left:2px solid rgba(106,176,212,.35);border-radius:0 8px 8px 0}
+.fun-fact-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;color:rgba(106,176,212,.7);text-transform:uppercase;margin-bottom:4px}
+.fun-fact-text{font-size:.82rem;color:var(--muted);line-height:1.55;font-style:italic}
+
+/* ── OTHERS ── */
+.others-label{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px}
+.other-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:12px 16px;transition:border-color .2s,background .2s;cursor:pointer}
+.other-card:hover{border-color:rgba(210,165,80,.3);background:var(--card)}
+.other-rank{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2);padding-top:3px}
+.other-info{}
+.other-name{font-size:.95rem;color:var(--cream);margin-bottom:2px}
+.other-meta{font-size:.75rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:3px}
+.other-meta span{display:flex;align-items:center;gap:4px}
+.other-prob{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--gold-dim);white-space:nowrap;padding-top:3px}
+.other-bar-wrap{height:2px;background:rgba(255,255,255,.05);border-radius:1px;grid-column:1/-1;margin-top:2px;overflow:hidden}
+.other-bar{height:100%;background:var(--gold-dim);border-radius:1px;width:0;transition:width .8s cubic-bezier(.77,0,.175,1)}
+
+/* ── FOOTER ── */
+footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--border);text-align:center;font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.14em;color:var(--muted);opacity:.5}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="glow-orb"></div>
+<div class="wrapper">
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-line"></div><div class="logo-diamond"></div><div class="logo-line"></div>
+    </div>
+    <h1>Rasa<em>yana</em></h1>
+    <p class="tagline">Indian Food Intelligence · Cross-Modal Vision</p>
+    <div id="status-pill"><div class="dot"></div><span id="status-text">Connecting…</span></div>
+  </header>
+
+  <div class="drop-zone" id="drop-zone">
+    <input type="file" id="file-input" accept="image/*"/>
+    <span class="drop-icon">🍛</span>
+    <p class="drop-title">Drop your food image here</p>
+    <p class="drop-sub">or <b>click to browse</b> · JPG PNG WEBP</p>
+  </div>
+
+  <div id="preview-wrap">
+    <img id="preview-img" alt="preview"/>
+    <div class="preview-overlay"></div>
+    <span class="preview-label">Ready to analyse</span>
+    <button class="clear-btn" id="clear-btn">✕ Clear</button>
+  </div>
+
+  <div class="btn-wrap">
+    <button id="analyse-btn" disabled><span>✦ Identify Dish</span></button>
+  </div>
+
+  <div id="loader"><div class="loader-ring"></div><p class="loader-text">Analysing image + semantics…</p></div>
+  <div id="error-box"></div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header">
+      <h2 class="results-title">Identification</h2>
+      <span class="results-sub">Top 5 candidates</span>
+    </div>
+
+    <!-- TOP CARD -->
+    <div class="top-card">
+      <div class="top-card-header">
+        <div class="top-badge">Best Match</div>
+        <div class="top-name" id="top-name">—</div>
+        <div class="top-origin" id="top-origin">—</div>
+        <div class="conf-row">
+          <span class="conf-pct" id="top-conf">—</span>
+          <div class="conf-bar-wrap"><div class="conf-bar" id="top-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- INFO GRID -->
+      <div class="info-grid" id="info-grid">
+        <div class="info-cell">
+          <div class="info-label">Calories</div>
+          <div class="info-value" id="ic-cal">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Health</div>
+          <div class="info-value" id="ic-health">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Spice Level</div>
+          <div class="info-value" id="ic-spice">—</div>
+          <div class="spice-dots" id="ic-spice-dots"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Diet</div>
+          <div class="info-value" id="ic-diet">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-label">Meal Type</div>
+          <div class="info-value" id="ic-meal">—</div>
+        </div>
+      </div>
+
+      <!-- DESCRIPTION + INGREDIENTS + FUN FACT -->
+      <div class="top-desc-section">
+        <p class="top-desc" id="top-desc">—</p>
+        <div class="ingr-label">Key Ingredients</div>
+        <div class="ingr-list" id="ingr-list"></div>
+        <div class="fun-fact" id="fun-fact-box">
+          <div class="fun-fact-label">✦ Did you know?</div>
+          <p class="fun-fact-text" id="fun-fact-text">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHERS -->
+    <p class="others-label">Other candidates</p>
+    <div id="others-list"></div>
+  </div>
+
+</div>
+<footer>Rasayana · ResNet-18 + TF-IDF Fusion · 81 Indian Food Classes</footer>
+
+<script>
+const API = "http://localhost:5000";
+
+const dropZone    = document.getElementById("drop-zone");
+const fileInput   = document.getElementById("file-input");
+const previewWrap = document.getElementById("preview-wrap");
+const previewImg  = document.getElementById("preview-img");
+const clearBtn    = document.getElementById("clear-btn");
+const analyseBtn  = document.getElementById("analyse-btn");
+const loader      = document.getElementById("loader");
+const results     = document.getElementById("results");
+const errorBox    = document.getElementById("error-box");
+const statusPill  = document.getElementById("status-pill");
+const statusText  = document.getElementById("status-text");
+
+let selectedFile = null;
+
+// ── health check ──
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`, { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      const d = await r.json();
+      statusPill.className = "ok";
+      statusText.textContent = `Model ready · ${d.classes} classes · ${d.device.toUpperCase()}`;
+    } else throw new Error();
+  } catch {
+    statusPill.className = "fail";
+    statusText.textContent = "Backend offline — start app.py first";
+  }
+}
+checkHealth();
+
+// ── drag & drop ──
+["dragenter","dragover"].forEach(e =>
+  dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add("drag-over"); })
+);
+["dragleave","drop"].forEach(e =>
+  dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove("drag-over"); })
+);
+dropZone.addEventListener("drop", ev => { if (ev.dataTransfer.files[0]) setFile(ev.dataTransfer.files[0]); });
+fileInput.addEventListener("change", () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(file) {
+  selectedFile = file;
+  previewImg.src = URL.createObjectURL(file);
+  previewWrap.style.display = "block";
+  analyseBtn.disabled = false;
+  hide(results); hide(errorBox);
+}
+
+clearBtn.addEventListener("click", () => {
+  selectedFile = null; fileInput.value = "";
+  previewWrap.style.display = "none";
+  analyseBtn.disabled = true;
+  hide(results); hide(errorBox);
+});
+
+// ── analyse ──
+analyseBtn.addEventListener("click", async () => {
+  if (!selectedFile) return;
+  analyseBtn.disabled = true;
+  show(loader); hide(results); hide(errorBox);
+
+  const fd = new FormData();
+  fd.append("image", selectedFile);
+
+  try {
+    const res  = await fetch(`${API}/predict`, { method:"POST", body:fd });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Server error");
+    renderResults(data.predictions);
+  } catch (err) {
+    showError(`${err.message}. Make sure app.py is running.`);
+  } finally {
+    hide(loader);
+    analyseBtn.disabled = false;
+  }
+});
+
+// ── spice level mapping ──
+const SPICE_MAP = { "None":0, "Mild":1, "Medium":2, "Hot":3, "Very Hot":4 };
+
+function spiceDots(level) {
+  const max = 4, lit = SPICE_MAP[level] ?? 0;
+  let html = "";
+  for (let i = 0; i < max; i++)
+    html += `<div class="spice-dot ${i < lit ? 'lit' : ''}"></div>`;
+  return html;
+}
+
+function healthClass(tag) {
+  if (!tag) return "";
+  const t = tag.toLowerCase();
+  if (t === "healthy")   return "tag-healthy";
+  if (t === "moderate")  return "tag-moderate";
+  if (t === "indulgent") return "tag-indulgent";
+  return "";
+}
+
+function dietPill(diet) {
+  if (!diet) return "";
+  const t = diet.toLowerCase();
+  if (t === "vegan")           return `<span class="diet-pill diet-vegan">🌿 Vegan</span>`;
+  if (t === "vegetarian")      return `<span class="diet-pill diet-veg">🥛 Vegetarian</span>`;
+  if (t === "non-vegetarian")  return `<span class="diet-pill diet-nonveg">🍗 Non-Veg</span>`;
+  return `<span class="diet-pill diet-veg">${diet}</span>`;
+}
+
+function renderResults(preds) {
+  if (!preds?.length) { showError("No predictions returned."); return; }
+  const top = preds[0];
+
+  document.getElementById("top-name").textContent  = top.label;
+  document.getElementById("top-origin").textContent = `📍 ${top.origin || "India"}`;
+  document.getElementById("top-conf").textContent   = `${top.probability}% confidence`;
+  document.getElementById("top-desc").textContent   = top.description;
+  document.getElementById("fun-fact-text").textContent = top.fun_fact || "";
+  document.getElementById("fun-fact-box").style.display = top.fun_fact ? "block" : "none";
+
+  // calories
+  const cal = top.calories_per_100g;
+  document.getElementById("ic-cal").innerHTML =
+    cal ? `<strong>${cal}</strong> <span style="font-size:.72rem;color:var(--muted)">kcal/100g</span>` : "N/A";
+
+  // health
+  const hEl = document.getElementById("ic-health");
+  hEl.textContent = top.health_tag || "—";
+  hEl.className   = `info-value ${healthClass(top.health_tag)}`;
+
+  // spice
+  document.getElementById("ic-spice").textContent = top.spice_level || "—";
+  document.getElementById("ic-spice-dots").innerHTML = spiceDots(top.spice_level);
+
+  // diet
+  document.getElementById("ic-diet").innerHTML = dietPill(top.diet_type);
+
+  // meal type
+  document.getElementById("ic-meal").textContent = top.meal_type || "—";
+
+  // ingredients
+  const ingrList = document.getElementById("ingr-list");
+  ingrList.innerHTML = (top.ingredients || [])
+    .map(i => `<span class="ingr-pill">${i}</span>`).join("");
+
+  // confidence bar
+  setTimeout(() => { document.getElementById("top-bar").style.width = `${top.probability}%`; }, 60);
+
+  // others
+  const list = document.getElementById("others-list");
+  list.innerHTML = "";
+  preds.slice(1).forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "other-card";
+    div.innerHTML = `
+      <div class="other-rank">#${i+2}</div>
+      <div class="other-info">
+        <div class="other-name">${p.label}</div>
+        <div class="other-meta">
+          <span>${p.meal_type || ""}</span>
+          ${p.calories_per_100g ? `<span>🔥 ${p.calories_per_100g} kcal</span>` : ""}
+          <span>${p.spice_level ? "🌶 " + p.spice_level : ""}</span>
+        </div>
+        <div class="other-bar-wrap"><div class="other-bar" data-pct="${p.probability}"></div></div>
+      </div>
+      <div class="other-prob">${p.probability}%</div>
+    `;
+    list.appendChild(div);
+    setTimeout(() => {
+      div.querySelector(".other-bar").style.width = `${p.probability}%`;
+    }, 250 + i * 70);
+  });
+
+  show(results);
+  results.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function show(el) { el.style.display = "block"; }
+function hide(el) { el.style.display = "none"; }
+function showError(msg) { errorBox.textContent = `⚠ ${msg}`; show(errorBox); }
+</script>
+</body>
+</html>
